@@ -1,0 +1,309 @@
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import numpy as np
+import pytest
+from pyBKT.models import Model
+from streamlit.testing.v1 import AppTest
+
+from app.bootstrap import AppSettings, BootstrapError, build_controller, load_approved_bank
+from app.main import configured_settings
+from bkt.adapter import PyBKTAdapter
+from bkt.train_dev_model import MODERATED_PILOT_PARAMETERS, generate_synthetic_attempts
+from database import is_postgres_dsn
+
+
+BANK_PATH = Path("outputs/approved_banks/pilot-approved-bank-38-v1.jsonl")
+
+
+def _fixed_coefficient_model(skill_ids: list[str], *, seed: int) -> Model:
+    """A fast, hermetic pyBKT model covering only the given skills -- no
+    fitted-artifact fixture file required, unlike a real EM-fit model."""
+    attempts = generate_synthetic_attempts(skill_ids, seed=seed)
+    training_frame = PyBKTAdapter().to_dataframe(attempts)
+    model = Model(seed=seed, num_fits=1, parallel=False)
+    model.coef_ = {
+        skill_id: {
+            "prior": MODERATED_PILOT_PARAMETERS["prior"],
+            "learns": np.array([MODERATED_PILOT_PARAMETERS["learns"]]),
+            "guesses": np.array([MODERATED_PILOT_PARAMETERS["guesses"]]),
+            "slips": np.array([MODERATED_PILOT_PARAMETERS["slips"]]),
+            "forgets": np.array([MODERATED_PILOT_PARAMETERS["forgets"]]),
+        }
+        for skill_id in skill_ids
+    }
+    model.fit(data=training_frame, fixed=True)
+    return model
+
+
+def test_entrypoint_resolves_package_imports_outside_repository_cwd(tmp_path):
+    entrypoint = Path("app/main.py").resolve()
+    command = (
+        "import runpy; "
+        f"runpy.run_path({str(entrypoint)!r}, run_name='streamlit_import_test')"
+    )
+
+    completed = subprocess.run(
+        [sys.executable, "-c", command],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0
+    assert "ModuleNotFoundError" not in completed.stderr
+
+
+def test_configured_approved_bank_contains_38_items():
+    items = load_approved_bank(BANK_PATH)
+
+    assert len(items) == 38
+    assert len({item.item_id for item in items}) == 38
+
+
+@pytest.mark.parametrize(
+    ("bank_path", "model_path", "message"),
+    [
+        (Path("missing-bank.jsonl"), Path("outputs/bkt_dev_model_v4.pkl"), "bank"),
+        (BANK_PATH, Path("missing-model.pkl"), "BKT model"),
+    ],
+)
+def test_bootstrap_reports_missing_runtime_artifacts(tmp_path, bank_path, model_path, message):
+    settings = AppSettings(
+        database_path=tmp_path / "app.sqlite3",
+        approved_bank_path=bank_path,
+        bkt_model_path=model_path,
+        skills_path=Path("taxonomy/data/ai/skills.csv"),
+        references_path=Path("taxonomy/data/ai/references.csv"),
+        model_version="bkt-synthetic-v4",
+        policy_version="recommendation-policy-v1",
+    )
+
+    with pytest.raises(BootstrapError, match=message):
+        build_controller(settings)
+
+
+def test_bootstrap_rejects_model_without_every_bank_skill(tmp_path):
+    incomplete_model_path = tmp_path / "incomplete-coverage-model.pkl"
+    # Deliberately excludes AI-AGT-01 and AI-SRC-03, both present in BANK_PATH.
+    _fixed_coefficient_model(
+        ["AI-FND-01", "AI-SRC-01", "AI-SRC-02", "AI-SRC-08"], seed=20260101
+    ).save(str(incomplete_model_path))
+
+    settings = AppSettings(
+        database_path=tmp_path / "coverage.sqlite3",
+        approved_bank_path=BANK_PATH,
+        bkt_model_path=incomplete_model_path,
+        skills_path=Path("taxonomy/data/ai/skills.csv"),
+        references_path=Path("taxonomy/data/ai/references.csv"),
+        model_version="bkt-synthetic-incomplete-coverage-fixture",
+        policy_version="recommendation-policy-v1",
+        initial_mastery_probability=0.0,
+    )
+
+    with pytest.raises(BootstrapError, match="AI-AGT-01, AI-SRC-03"):
+        build_controller(settings)
+
+
+def test_bootstrap_rejects_initial_mastery_that_differs_from_model_prior(tmp_path):
+    settings = AppSettings(
+        database_path=tmp_path / "prior.sqlite3",
+        approved_bank_path=BANK_PATH,
+        bkt_model_path=Path("outputs/bkt_dev_model_v4.pkl"),
+        skills_path=Path("taxonomy/data/ai/skills.csv"),
+        references_path=Path("taxonomy/data/ai/references.csv"),
+        model_version="bkt-synthetic-v4",
+        policy_version="recommendation-policy-v1",
+        initial_mastery_probability=0.0,
+    )
+
+    with pytest.raises(BootstrapError, match="initial mastery"):
+        build_controller(settings)
+
+
+def test_streamlit_entrypoint_starts_without_interaction(monkeypatch, tmp_path):
+    monkeypatch.setenv("QUIZ_APPROVED_BANK_PATH", str(BANK_PATH))
+    monkeypatch.setenv("QUIZ_BKT_MODEL_PATH", "outputs/bkt_dev_model_v4.pkl")
+    monkeypatch.setenv("QUIZ_BKT_MODEL_VERSION", "bkt-synthetic-v4")
+    monkeypatch.setenv("QUIZ_INITIAL_MASTERY_PROBABILITY", "0.20")
+    monkeypatch.setenv("QUIZ_DATABASE_PATH", str(tmp_path / "startup.sqlite3"))
+
+    app = AppTest.from_file("app/main.py").run(timeout=20)
+
+    assert not app.exception
+    assert app.title[0].value == "Adaptive Quiz"
+    assert app.text_input[0].label == "Learner ID"
+
+
+def test_streamlit_submission_locks_question_and_shows_feedback(monkeypatch, tmp_path):
+    monkeypatch.setenv("QUIZ_APPROVED_BANK_PATH", str(BANK_PATH))
+    monkeypatch.setenv("QUIZ_BKT_MODEL_PATH", "outputs/bkt_dev_model_v4.pkl")
+    monkeypatch.setenv("QUIZ_BKT_MODEL_VERSION", "bkt-synthetic-v4")
+    monkeypatch.setenv("QUIZ_INITIAL_MASTERY_PROBABILITY", "0.20")
+    monkeypatch.setenv("QUIZ_DATABASE_PATH", str(tmp_path / "submission.sqlite3"))
+    app = AppTest.from_file("app/main.py").run(timeout=20)
+    app.text_input[0].set_value("streamlit-submit-test")
+    next(button for button in app.button if button.label == "Start").click()
+    app.run(timeout=20)
+    app.text_input[0].set_value("AI")
+    next(button for button in app.button if button.label == "Continue").click()
+    app.run(timeout=20)
+    app.radio[0].set_value(app.radio[0].options[0])
+    next(button for button in app.button if button.label == "Submit").click()
+    app.run(timeout=20)
+
+    submit = next(button for button in app.button if button.label == "Submit")
+    assert not app.exception
+    assert submit.disabled is True
+    assert len(app.success) + len(app.error) >= 1
+    assert {metric.label for metric in app.metric} == {
+        "Previous mastery",
+        "Updated mastery",
+    }
+    assert any(button.label == "Next Question" for button in app.button)
+
+
+def test_switch_button_returns_to_login_and_activates_a_new_learner(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setenv("QUIZ_APPROVED_BANK_PATH", str(BANK_PATH))
+    monkeypatch.setenv("QUIZ_BKT_MODEL_PATH", "outputs/bkt_dev_model_v4.pkl")
+    monkeypatch.setenv("QUIZ_BKT_MODEL_VERSION", "bkt-synthetic-v4")
+    monkeypatch.setenv("QUIZ_INITIAL_MASTERY_PROBABILITY", "0.20")
+    monkeypatch.setenv("QUIZ_DATABASE_PATH", str(tmp_path / "switch.sqlite3"))
+    app = AppTest.from_file("app/main.py").run(timeout=20)
+    app.text_input[0].set_value("learner-a")
+    next(button for button in app.button if button.label == "Start").click()
+    app.run(timeout=20)
+    app.text_input[0].set_value("AI")
+    next(button for button in app.button if button.label == "Continue").click()
+    app.run(timeout=20)
+
+    next(button for button in app.button if button.label == "Switch learner").click()
+    app.run(timeout=20)
+
+    session = app.session_state["adaptive_quiz_session"]
+    assert session.learner_id is None
+    assert session.course_id is None
+    assert session.question is None
+    assert app.text_input[0].label == "Learner ID"
+    assert any(button.label == "Start" for button in app.button)
+
+    app.text_input[0].set_value("learner-b")
+    next(button for button in app.button if button.label == "Start").click()
+    app.run(timeout=20)
+    app.text_input[0].set_value("AI")
+    next(button for button in app.button if button.label == "Continue").click()
+    app.run(timeout=20)
+
+    session = app.session_state["adaptive_quiz_session"]
+    assert not app.exception
+    assert session.learner_id == "learner-b"
+    assert session.question is not None
+    assert any(
+        "Learner: learner-b" in markdown.value for markdown in app.markdown
+    )
+
+
+def test_course_selector_reports_being_prepared_for_a_registered_but_inactive_course(
+    monkeypatch, tmp_path
+):
+    # Force dsa back to a non-active status in an isolated manifest
+    # directory -- the real catalog's lifecycle state is not a stable test
+    # fixture (dsa is active in production as of the three-course rollout).
+    from authoring.replenishment.manifest import (
+        MANIFEST_DIRECTORY as REAL_MANIFEST_DIRECTORY,
+    )
+
+    manifest_dir = tmp_path / "manifests"
+    manifest_dir.mkdir()
+    for source in REAL_MANIFEST_DIRECTORY.glob("*.json"):
+        manifest = json.loads(source.read_text(encoding="utf-8"))
+        if manifest["course_id"] == "dsa":
+            manifest["status"] = "awaiting_content_approval"
+        (manifest_dir / source.name).write_text(json.dumps(manifest), encoding="utf-8")
+    monkeypatch.setattr(
+        "authoring.replenishment.manifest.MANIFEST_DIRECTORY", manifest_dir
+    )
+
+    monkeypatch.setenv("QUIZ_APPROVED_BANK_PATH", str(BANK_PATH))
+    monkeypatch.setenv("QUIZ_BKT_MODEL_PATH", "outputs/bkt_dev_model_v4.pkl")
+    monkeypatch.setenv("QUIZ_BKT_MODEL_VERSION", "bkt-synthetic-v4")
+    monkeypatch.setenv("QUIZ_INITIAL_MASTERY_PROBABILITY", "0.20")
+    monkeypatch.setenv("QUIZ_DATABASE_PATH", str(tmp_path / "being-prepared.sqlite3"))
+
+    app = AppTest.from_file("app/main.py").run(timeout=20)
+    app.text_input[0].set_value("being-prepared-test")
+    next(button for button in app.button if button.label == "Start").click()
+    app.run(timeout=20)
+
+    # dsa is registered (aliases include "DSA") but not yet active.
+    app.text_input[0].set_value("DSA")
+    next(button for button in app.button if button.label == "Continue").click()
+    app.run(timeout=20)
+
+    assert not app.exception
+    assert any(
+        "This course is being prepared and is not available for practice yet." in info.value
+        for info in app.info
+    )
+    # The selector form is still present -- the learner can retry immediately.
+    assert app.text_input[0].label == "Which course?"
+
+
+def test_course_selector_reports_a_distinct_error_for_an_unrecognized_course(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setenv("QUIZ_APPROVED_BANK_PATH", str(BANK_PATH))
+    monkeypatch.setenv("QUIZ_BKT_MODEL_PATH", "outputs/bkt_dev_model_v4.pkl")
+    monkeypatch.setenv("QUIZ_BKT_MODEL_VERSION", "bkt-synthetic-v4")
+    monkeypatch.setenv("QUIZ_INITIAL_MASTERY_PROBABILITY", "0.20")
+    monkeypatch.setenv("QUIZ_DATABASE_PATH", str(tmp_path / "unrecognized.sqlite3"))
+
+    app = AppTest.from_file("app/main.py").run(timeout=20)
+    app.text_input[0].set_value("unrecognized-test")
+    next(button for button in app.button if button.label == "Start").click()
+    app.run(timeout=20)
+
+    app.text_input[0].set_value("Astrophysics")
+    next(button for button in app.button if button.label == "Continue").click()
+    app.run(timeout=20)
+
+    assert not app.exception
+    assert any("not a recognized course" in error.value for error in app.error)
+    assert not any(
+        "being prepared" in info.value for info in app.info
+    )
+
+
+def test_the_local_suite_never_resolves_settings_from_the_real_secrets_file(
+    monkeypatch, tmp_path
+):
+    """.streamlit/secrets.toml is a real, git-ignored file (absent in CI and
+    on a fresh clone) that on a configured developer machine carries the
+    live production Supabase QUIZ_DATABASE_URL. This test only proves
+    anything when that file is actually present -- it is not a substitute
+    for the no_real_secrets autouse fixture in conftest.py, it is proof that
+    fixture is doing its job: even though the real secret is sitting on disk
+    right where app.main.configured_settings() would normally read it from,
+    resolving settings here must still land on the explicit SQLite path,
+    never on the Supabase DSN."""
+    secrets_path = Path(".streamlit/secrets.toml")
+    if not secrets_path.is_file():
+        pytest.skip("the real .streamlit/secrets.toml is not present on this machine")
+    assert "QUIZ_DATABASE_URL" in secrets_path.read_text()
+
+    monkeypatch.delenv("QUIZ_DATABASE_URL", raising=False)
+    monkeypatch.setenv("QUIZ_APPROVED_BANK_PATH", str(BANK_PATH))
+    monkeypatch.setenv("QUIZ_BKT_MODEL_PATH", "outputs/bkt_dev_model_v4.pkl")
+    monkeypatch.setenv("QUIZ_BKT_MODEL_VERSION", "bkt-synthetic-v4")
+    expected_path = tmp_path / "secret-isolation.sqlite3"
+    monkeypatch.setenv("QUIZ_DATABASE_PATH", str(expected_path))
+
+    settings = configured_settings()
+
+    assert not is_postgres_dsn(str(settings.database_path))
+    assert Path(settings.database_path) == expected_path

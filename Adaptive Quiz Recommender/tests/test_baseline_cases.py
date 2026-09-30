@@ -1,0 +1,68 @@
+from api.quiz_generator import token_budget
+from evaluation.baseline_cases import BASELINE_CASES
+
+
+def test_case_id_uniqueness():
+    case_ids = [case.case_id for case in BASELINE_CASES]
+    
+    assert len(case_ids) == len(set(case_ids))
+
+def test_difficulty_levels():
+    difficulties = {
+    case.request.difficulty
+    for case in BASELINE_CASES
+}
+
+    assert difficulties == {
+        "introductory",
+        "intermediate",
+        "advanced",
+    }
+
+def test_include_question_count():
+    question_counts = {
+        case.request.question_count 
+        for case in BASELINE_CASES
+    }
+
+    assert question_counts == {
+        1,
+        3,
+        5,
+    }
+
+def test_positive_token_budget():
+    assert all(
+        (case.max_new_tokens or token_budget(case.request.question_count)) > 0
+        for case in BASELINE_CASES
+    )
+
+
+def test_objective_types_cover_both_kinds():
+    objective_types = {case.objective_type for case in BASELINE_CASES}
+
+    assert objective_types == {"conceptual", "calculation"}
+
+
+def test_every_case_supplies_reference_material():
+    assert all(
+        case.request.reference_material
+        for case in BASELINE_CASES
+    )
+
+
+def test_topic_learning_objective_not_empty():
+    assert all (
+        case.request.topic.strip()
+        for case in BASELINE_CASES
+    )
+
+    assert all(
+        case.request.learning_objective
+        for case in BASELINE_CASES
+    )
+
+
+def test_nine_cases_present():
+    assert len(BASELINE_CASES) == 9
+

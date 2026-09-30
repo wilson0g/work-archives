@@ -1,0 +1,28 @@
+{
+  "aliases": [
+    "DB",
+    "Databases",
+    "Database Systems",
+    "DBMS"
+  ],
+  "allowed_domains": [
+    "ocw.mit.edu",
+    "cs50.harvard.edu",
+    "eng.libretexts.org",
+    "cs186berkeley.net"
+  ],
+  "approved_bank_path": "outputs/approved_banks/database-systems-approved-bank-28-v1.jsonl",
+  "auto_activate_when_ready": true,
+  "bkt_model_path": "outputs/bkt_database_systems_model_v2.pkl",
+  "candidate_store_path": "outputs/replenishment/database-systems/reference_candidates.json",
+  "course_id": "database-systems",
+  "default_bkt_model_version": "bkt-database-systems-v2",
+  "low_supply_threshold": 3,
+  "max_session_questions": 20,
+  "review_store_path": "outputs/replenishment/database-systems/reviews",
+  "status": "active",
+  "target_supply": 6,
+  "taxonomy_path": "taxonomy/data/database-systems",
+  "title": "Database Systems",
+  "version": "1"
+}
