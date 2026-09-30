@@ -30,8 +30,10 @@ automated + human review pipeline before it reaches a learner.
 ## Quick start
 
 ```bash
+git clone https://github.com/wilson0g/work-archives.git
+cd work-archives/"Adaptive Quiz Recommender"
 python -m pip install -r requirements.txt
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml  # fill in your keys
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml  # optional: add credentials for content generation
 streamlit run app/main.py
 ```
 
