@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+
+<style>
+
+h2 {color: #6495ED;}
+h1 {color: #6495ED;}
+
+
+</style>
+
+
+<body>
+
+    
+    <br>
+     <h1 style="font-size: larger;"><a href="index.html" title = "Home page">
+                <button> ⬅BACK</button>
+            </a></h1>
+    <br>
+<h1 style="text-align:center;">QUIZ 2 📝</h1>
+         <hr style="border:solid cornflowerblue;">
+
+    <h2>Question 1:What are the values in the P V Q column </h2>
+    <img src="zz.jpeg" alt="P OR Q TABLE"><br>
+
+
+    <input type="radio" name="q1" value="false">F F F T<br>
+    <input type="radio" name="q1" value="true"> T T T F<br>
+    <input type="radio" name="q1" value="false"> T T F F <br>
+    <div id="feedback1" ></div>
+
+
+    <h2>Question 2:What are the values in the P ⋀ Q column </h2>
+    <img src="mm.jpeg" alt="P AND Q TABLE"><br>
+
+    <input type="radio" name="q2" value="false">F F F T<br>
+    <input type="radio" name="q2" value="false">T T T F<br>
+    <input type="radio" name="q2" value="false">F T F F<br>
+    <input type="radio" name="q2" value="true">T F F F<br>
+
+        <div id="feedback2" ></div>
+
+
+    <h2>Question 3:What are the values in the P → Q column </h2>
+    <img src="kk.jpeg" alt="P IMPLIES Q TABLE"><br>
+    <input type="radio" name="q3" value="false">F F F F <br>
+    <input type="radio" name="q3" value="false">F T F F <br>
+    <input type="radio" name="q3" value="true">T F T T <br>
+    <input type="radio" name="q3" value="false"> T T T T<br>
+
+        <div id="feedback3" ></div>
+
+ <h2>Question 4:What are the values in the P ⊕ Q column </h2>
+    <img src="bb.jpeg" alt="P exclusive or Q TABLE"><br>
+    <input type="radio" name="q4" value="false">T F F T <br>
+    <input type="radio" name="q4" value="true">F T T F <br>
+    <input type="radio" name="q4" value="false">T F T F <br>
+    <input type="radio" name="q4" value="false"> NONE WILL CORRECTLY FIT.<br>
+
+        <div id="feedback4" ></div>
+	 <div id="MyGrade"></div>
+
+
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <button onclick="Answers()">Grade</button>
+
+
+<script>
+function Answers() {
+let score=0;
+    let q1 = document.querySelector('input[name="q1"]:checked');
+
+    if (!q1) {
+        document.getElementById("feedback1").textContent = "No answer selected"; }
+
+    else if (q1.value === "true") {
+        document.getElementById("feedback1").textContent = "Correct✅"; }
+	 else {
+        document.getElementById("feedback1").textContent = "Wrong❌ HINT: The outcome is only false when both inputs are false.";
+    }
+
+
+    let q2 = document.querySelector('input[name="q2"]:checked');
+
+    if (!q2) {
+        document.getElementById("feedback2").textContent = "No answer selected";}
+
+    else if (q2.value === "true") {
+        document.getElementById("feedback2").textContent = "Correct✅";
+    } else {
+        document.getElementById("feedback2").textContent = "Wrong❌ HINT: Outcome is only true when both outcomes are true.";
+    }
+
+ let q3 = document.querySelector('input[name="q3"]:checked');
+
+    if (!q3) {
+        document.getElementById("feedback3").textContent = "No answer selected";}
+
+    else if (q3.value === "true") {
+        document.getElementById("feedback3").textContent = "Correct✅";
+    } else {
+        document.getElementById("feedback3").textContent = "Wrong❌ HINT: The outcome is only false when P is true, and Q is false.";
+    }
+
+
+let q4 = document.querySelector('input[name="q4"]:checked');
+
+    if (!q4) {
+        document.getElementById("feedback4").textContent = "No answer selected";}
+
+    else if (q4.value === "true") {
+        document.getElementById("feedback4").textContent = "Correct✅";
+    } else {
+        document.getElementById("feedback4").textContent = "Wrong❌ The output is only true when both inputs are different";
+    }
+let MyGrade = document.getElementById("MyGrade");
+
+MyGrade.textContent = "\nYou got a " + score + " out of 5";
+}
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head> </head>
+<style>
+
+h2 {color: #6495ED;}
+h1 {color: #6495ED;}
+
+
+</style>
+<body>
+    <h1 style="font-size: larger;"><a href="index.html" title = "Home page">
+                <button> ⬅️BACK</button>
+            </a></h1>
+    
+    <br>
+    <br>
+ <h1 style="text-align:center;">QUIZ 1 📝</h1>
+         <hr style="border:solid cornflowerblue;">
+	
+    <h2>Question 1: What is a propositional logic statement</h2>
+    <input type="radio" name="q1" value="true"> A true or false declarative sentence<br>
+    <input type="radio" name="q1" value="false1"> A sentence with a proposition<br>
+    <input type="radio" name="q1" value="false2"> Statements linked by prepositions <br>
+    <div id="feedback1" ></div>
+
+    <h2>Question 2: Which of these are propositional logics</h2>
+    <input type="radio" name="q2" value="false1">  X+6=3<br>
+    <input type="radio" name="q2" value="false2"> Is Ama a boy?<br>
+    <input type="radio" name="q2" value="false3"> Submit your assignment on time!<br>
+    <input type="radio" name="q2" value="true"> None<br>
+
+        <div id="feedback2" ></div>
+
+
+    <h2>Question 3: Which of the logical operations means 'and' </h2>
+    <input type="radio" name="q3" value="true"> ⋀ <br>
+    <input type="radio" name="q3" value="false1"> V <br>
+    <input type="radio" name="q3" value="false2"> ¬ <br>
+    <div id="feedback3" ></div>
+
+
+<h2>Question 4: Which of the logical operations means 'or' </h2>
+    <input type="radio" name="q4" value="false1"> ⋀ <br>
+    <input type="radio" name="q4" value="true"> V <br>
+    <input type="radio" name="q4" value="false2"> ¬ <br>
+    <div id="feedback4" ></div>
+
+
+<h2>Question 5: Which of the following is true </h2>
+    <input type="radio" name="q5" value="false1"> 0!=0 <br>
+    <input type="radio" name="q5" value="false2"> 2^2=5 <br>
+    <input type="radio" name="q5" value="true"> 1!=1<br>
+    <div id="feedback5" ></div>
+ 	<div id="MyGrade"></div>
+
+
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <button onclick="Answers()">Grade</button>
+
+
+<script>
+function Answers() {
+let score=0;
+    let q1 = document.querySelector('input[name="q1"]:checked');
+
+    if (!q1) {
+        document.getElementById("feedback1").textContent = "No answer selected"; }
+
+    else if (q1.value === "true") {
+	score++;
+        document.getElementById("feedback1").textContent = "Correct✅"; }
+
+     else if (q1.value === "false1") {
+        document.getElementById("feedback1").textContent = "Wrong❌ HINT: Can this have a truth table"; }
+
+     else if (q1.value === "false2") {
+        document.getElementById("feedback1").textContent = "Wrong❌ HINT: Can this have a truth table"; }
+
+	
+
+
+
+
+    let q2 = document.querySelector('input[name="q2"]:checked');
+
+    if (!q2) {
+        document.getElementById("feedback2").textContent = "No answer selected";}
+
+    else if (q2.value === "true") {
+	score++;
+        document.getElementById("feedback2").textContent = "Correct✅";
+    } 
+else if  (q2.value === "false2")
+	{
+        document.getElementById("feedback2").textContent = "Wrong❌ HINT: A question cannot be a propositional statement." ;
+    }
+else if (q2.value==="false3"){
+        document.getElementById("feedback2").textContent = "Wrong❌ HINT: Can you tell the true or false nature of a command?";
+
+}
+else if  (q2.value === "false1"){
+        document.getElementById("feedback2").textContent = "Wrong❌ HINT: The variable makes it impossible to determine the true or false nature of the equation.";
+
+}
+
+
+
+ let q3 = document.querySelector('input[name="q3"]:checked');
+
+    if (!q3) {
+        document.getElementById("feedback3").textContent = "No answer selected";}
+
+    else if (q3.value === "true") {
+   	score++;
+        document.getElementById("feedback3").textContent = "Correct✅";
+    }
+    else if (q3.value === "false1") {
+        document.getElementById("feedback3").textContent = "Wrong❌ Try Again ";
+    }
+    else if (q3.value === "false2") {
+        document.getElementById("feedback3").textContent = "Wrong❌ Try Again";
+    }
+
+
+
+let q4 = document.querySelector('input[name="q4"]:checked');
+
+    if (!q4) {
+        document.getElementById("feedback4").textContent = "No answer selected";}
+
+    else if (q4.value === "true") {
+	score++;
+        document.getElementById("feedback4").textContent = "Correct✅";}
+
+else if (q4.value === "false1") {
+        document.getElementById("feedback4").textContent = "Wrong❌ Try again.";}
+
+else if (q4.value === "false2") {
+        document.getElementById("feedback4").textContent = "Wrong❌ Try Again";}
+
+   
+
+
+
+
+let q5 = document.querySelector('input[name="q5"]:checked');
+
+    if (!q5) {
+        document.getElementById("feedback5").textContent = "No answer selected";}
+
+    else if (q5.value === "true") {
+	score++;
+        document.getElementById("feedback5").textContent = "Correct✅";}
+    else if (q5.value === "false1") {
+        document.getElementById("feedback5").textContent = "Wrong❌ HINT: 0!=1";}
+    else if (q5.value === "false2") {
+        document.getElementById("feedback5").textContent = "Wrong❌ HINT: 2^2=4";}
+
+   let MyGrade = document.getElementById("MyGrade");
+
+
+   
+MyGrade.textContent = "\nYou got a " + score + " out of 5";
+}
+
+
+</script>
+</body>
+</html>

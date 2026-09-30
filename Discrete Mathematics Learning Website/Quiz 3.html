@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+
+<style>
+
+h2 {color: #6495ED;}
+h1 {color: #6495ED;}
+
+</style>
+
+<body>
+    
+    <br>
+    <h1 style="font-size: larger;"><a href="index.html" title = "Home page">
+                <button> ⬅BACK</button>
+            </a></h1>
+    <br>
+<h1 style="text-align:center;">QUIZ 3📝</h1>
+         <hr style="border:solid cornflowerblue;">
+
+    <h2>Question 1:what is the contrapositive of this sentence? </h2>
+	<p> I get hungry when I do not eat.</p>
+<input type="radio" name="q1" value="true">  I eat, when I do not get hungry.<br>
+    <input type="radio" name="q1" value="false"> I do not eat, when I get hungry.<br>
+    <input type="radio" name="q1" value="false">I do not get hungry,when I eat. <br>
+    <div id="feedback1" ></div>
+
+
+  <h2>Question 2:what is the converse of this sentence? </h2>
+	<p> I get hungry when I do not eat.</p>
+<input type="radio" name="q2" value="false">  I eat,when I do not get hungry.<br>
+    <input type="radio" name="q2" value="true"> I do not eat, when I get hungry.<br>
+    <input type="radio" name="q2" value="false">I do not get hungry,when I eat. <br>
+    <div id="feedback2" ></div>
+
+
+  <h2>Question 3:what is the inverse of this sentence? </h2>
+	<p> I get hungry when I do not eat.</p>
+<input type="radio" name="q3" value="false">  I eat,when I do not get hungry.<br>
+    <input type="radio" name="q3" value="false"> I do not eat, when I get hungry.<br>
+    <input type="radio" name="q3" value="true">I do not get hungry,when I eat. <br>
+    <div id="feedback3" ></div>
+
+<h2>Question 4:what is the sign for biconditional </h2>
+<input type="radio" name="q4" value="true">  ↔️ <br>
+    <input type="radio" name="q4" value="false"> V <br>
+    <input type="radio" name="q4" value="false"> ↓ <br>
+    <div id="feedback4" ></div>
+
+<h2>Question 5:what is the sign for biconditional </h2>
+    <img src="zz.jpeg"alt="P OR Q TABLE"><br>
+
+<input type="radio" name="q5" value="false">  T T T T <br>
+    <input type="radio" name="q5" value="true"> T F F T <br>
+    <input type="radio" name="q5" value="false"> F F F F <br>
+    <div id="feedback5" ></div>
+    <div id="MyGrade"></div>
+
+
+
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <button onclick="Answers()">Grade</button>
+
+
+<script>
+function Answers() {
+let score=0;
+    let q1 = document.querySelector('input[name="q1"]:checked');
+
+    if (!q1) {
+        document.getElementById("feedback1").textContent = "No answer selected"; }
+
+    else if (q1.value === "true") {
+	score++;
+        document.getElementById("feedback1").textContent = "Correct✅"; }
+	 else {
+        document.getElementById("feedback1").textContent = "Wrong❌  HINT: Contrapositive of p→q is (¬q → ¬ p)";
+ }
+
+    let q2 = document.querySelector('input[name="q2"]:checked');
+
+    if (!q2) {
+        document.getElementById("feedback2").textContent = "No answer selected";}
+
+    else if (q2.value === "true") {
+	score++;
+        document.getElementById("feedback2").textContent = "Correct✅";
+    } else {
+        document.getElementById("feedback2").textContent = "Wrong❌  HINT: Converse of p→q is (q →p)";
+    }
+
+ let q3 = document.querySelector('input[name="q3"]:checked');
+
+    if (!q3) {
+        document.getElementById("feedback3").textContent = "No answer selected";}
+
+    else if (q3.value === "true") {
+	score++;
+        document.getElementById("feedback3").textContent = "Correct✅";
+    } else {
+        document.getElementById("feedback3").textContent = "Wrong❌ HINT: Inverse of p→q is (¬p → ¬ q)";
+    }
+
+ let q4 = document.querySelector('input[name="q4"]:checked');
+
+    if (!q4) {
+        document.getElementById("feedback4").textContent = "No answer selected";}
+
+    else if (q4.value === "true") {
+	score++;
+        document.getElementById("feedback4").textContent = "Correct✅";
+    } else {
+        document.getElementById("feedback4").textContent = "Wrong❌  Try Again.";
+    }
+
+let q5 = document.querySelector('input[name="q5"]:checked');
+
+    if (!q5) {
+        document.getElementById("feedback5").textContent = "No answer selected";}
+
+    else if (q5.value === "true") {
+	score++;
+        document.getElementById("feedback5").textContent = "Correct✅";
+    } else {
+        document.getElementById("feedback5").textContent = "Wrong❌  HINT: Outputs are only true when inputs are the same.";
+    }
+
+
+
+let MyGrade = document.getElementById("MyGrade");
+
+MyGrade.textContent = "\nYou got a " + score + " out of 4";
+}
+
+
+</script>
+</body>
+</html>
