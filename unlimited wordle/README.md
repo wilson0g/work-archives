@@ -2,6 +2,7 @@
 
 A Wordle clone you can play as many times as you want. A new random word comes up every game.
 
+To Play it: https://unlimited-wordle.netlify.app
 ## Features
 - Guess a 5-letter word in 6 tries
 - Green, yellow and grey tiles with a flip animation
