@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Charades</title>
+    <link rel="stylesheet" href="thecsspart.css">
+</head>
+<body>
+<section id="menu-screen" class="screen">
+    <h1>CHARADES</h1>
+    <p class="sub">Pick a category</p>
+    <div id="categories"></div>
+
+    <div id="custom-box" class="hidden">
+        <textarea id="custom-words" placeholder="Type your own words, separated by commas or new lines"></textarea>
+    </div>
+
+    <div class="options">
+        <label>Round length
+            <select id="duration">
+                <option value="30">30 seconds</option>
+                <option value="60" selected>60 seconds</option>
+                <option value="90">90 seconds</option>
+            </select>
+        </label>
+        <label class="check"><input type="checkbox" id="tilt-toggle" checked> Tilt controls (phone)</label>
+    </div>
+
+    <p id="menu-error" class="error"></p>
+    <button id="start-btn" class="big">Start</button>
+    <p class="tip">On your phone: turn it sideways and hold it to your forehead.<br>Tilt down = correct · Tilt up = skip</p>
+</section>
+
+<section id="game-screen" class="screen hidden">
+    <div class="top-bar">
+        <span id="game-category"></span>
+        <span>✓ <b id="game-score">0</b></span>
+    </div>
+    <div id="timer">60</div>
+    <div class="progress"><div id="progress-bar"></div></div>
+    <div id="word">Get ready</div>
+    <p class="tilt-hint">Tilt down = correct · Tilt up = skip</p>
+    <div class="buttons">
+        <button id="skip-btn" class="skip">✗ Skip</button>
+        <button id="correct-btn" class="correct">✓ Correct</button>
+    </div>
+</section>
+
+<section id="results-screen" class="screen hidden">
+    <p class="sub">Time's up!</p>
+    <div id="final-score">0</div>
+    <p id="best-line" class="sub"></p>
+    <ul id="results-list"></ul>
+    <button id="again-btn" class="big">Play again</button>
+    <button id="menu-btn" class="link">Change category</button>
+</section>
+
+<script src="words.js"></script>
+<script src="js.js"></script>
+</body>
+</html>
