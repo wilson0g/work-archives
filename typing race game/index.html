@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type or Die</title>
+    <link rel="stylesheet" href="thecsspart.css">
+</head>
+<body>
+<h1>TYPE OR DIE</h1>
+
+<div id="game">
+    <div id="hud">
+        <span>Score <b id="score">0</b></span>
+        <span>Level <b id="level">1</b></span>
+        <span id="lives"></span>
+    </div>
+
+    <div id="danger-line"><span>danger line</span></div>
+
+    <div id="overlay">
+        <h2 id="overlay-title">Type or Die</h2>
+        <p id="overlay-text">Type the falling words before they hit the red line.</p>
+        <button id="start-btn">Start</button>
+    </div>
+</div>
+
+<input id="input" type="text" placeholder="Type here..." autocomplete="off"
+       autocorrect="off" autocapitalize="off" spellcheck="false" disabled>
+<p class="hint">Best: <b id="best">0</b> · words vanish as soon as you finish typing them</p>
+
+<script src="js.js"></script>
+</body>
+</html>
